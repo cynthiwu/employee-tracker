@@ -161,22 +161,30 @@ function addEmployee() {
     })
 }
 
-// Need to figure out how to add a second option of choices 
 
 function updateRole() {
+    
     employeeChoice().then(([rows]) => {
-        console.log(rows);
         let employees = rows.map(r => ({name: r.first_name + " " + r.last_name, value: r.id}));
-        let employeeName = employees.map(r => r.name);
+
+        let roleId = rows.map(r => r.role_id);
+
         inquirer.prompt([
             {
             name:"employee",
             type:"list",
             message:"Which employee which you like to update?",
-            choices: employeeName
+            choices: employees
+            },
+            {
+            name:"role_id",
+            type:"list",
+            message:"Please select a new role ID.",
+            choices: roleId 
             }
         ]).then(function(response) {
-            console.log(response)
+            console.log(response);
+            updateemployeeRole(response.employee, response.role_id);
         })
     })
 }
@@ -215,4 +223,11 @@ function createEmployee(first_name, last_name, role_id, manager) {
             start();
         })
     }    
+}
+
+function updateemployeeRole(employee_id, role_id) {
+    connection.query("UPDATE employee SET role_id = ? WHERE id = ?", [`${role_id}`, `${employee_id}`], function (err, res) {
+        if (err) throw err;
+        start();
+    })
 }
