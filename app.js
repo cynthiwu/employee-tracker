@@ -67,11 +67,11 @@ function start() {
             case "Quit":   
                 connection.end(); 
                 break;        
-        }
-    })
-}
+        };
+    });
+};
 
-const query = `SELECT e.id AS ID, e.first_name AS 'First Name', e.last_name AS 'Last Name', r.title AS Role, d.name AS Department, r.salary AS Salary, CONCAT(m.first_name,' ',m.last_name) AS Manager FROM employee e LEFT JOIN role r ON e.role_id = r.id LEFT JOIN department d ON r.department_id = d.id LEFT JOIN employee m ON e.manager_id = m.id`
+const query = `SELECT e.id AS ID, e.first_name AS 'First Name', e.last_name AS 'Last Name', r.title AS Role, d.name AS Department, r.salary AS Salary, CONCAT(m.first_name,' ',m.last_name) AS Manager FROM employee e LEFT JOIN role r ON e.role_id = r.id LEFT JOIN department d ON r.department_id = d.id LEFT JOIN employee m ON e.manager_id = m.id`;
 
 // I realize that the way I am doing this is setting me up to be vulnerable to SQL injections. I have been trying to get it to work with placeholders, but I keep getting an error. I will keep it this way for now. 
 
@@ -82,8 +82,8 @@ function allEmployees(request) {
             if (err) throw err;
             console.table(res);
             start();
-        })      
-}
+        });      
+};
 
 function employeeByDept() {
 
@@ -104,28 +104,24 @@ function employeeByDept() {
 function employeeByManage() {
 
     employeeChoice().then(([rows]) => {
-        console.log(rows);
         let employees = rows.map(r => ({name: r.first_name + " " + r.last_name, value: r.id}));
         let managerIds = rows.map(r => r.manager_id);
         let idArr = [...new Set(managerIds)];
         let managers = employees.filter(e => idArr.includes(e.value));
-        console.log(managers);
-
+        
         inquirer.prompt({
         name:"manager",
         type: "list",
         message: "Please select a Manager.",
         choices: managers
         }).then(function(response) {
-        console.log(response)
         allEmployees(`WHERE e.manager_id = "${response.manager}"`); 
-        })
-    })
-}
+        });
+    });
+};
 
 function addEmployee() {
     employeeChoice().then(([rows]) => {
-        console.log(rows);
         let roleId = rows.map(r => r.role_id);
 
         let employees = rows.map(r => r.id);
@@ -181,7 +177,6 @@ function updateRole() {
             choices: roleId 
             }
         ]).then(function(response) {
-            console.log(response);
             updateemployeeRole(response.employee, response.role_id);
         })
     })
@@ -223,7 +218,6 @@ function addRole() {
             },
 
         ]).then(function(response) {
-            console.log(response);
             addNewRole(response.title, response.salary, response.department_id);
         })
     })
@@ -237,7 +231,6 @@ function addDept() {
         message:"What is the department name?",
         },
         ]).then(function(response) {
-            console.log(response);
             addNewDept(response.name);
     })   
 }
