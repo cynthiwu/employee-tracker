@@ -29,6 +29,7 @@ function start() {
             "Add Employee",
             "Update Employee Role",
             "View All Roles",
+            "View All Departments",
             "Add Role",
             "Add Department",
             "Quit"
@@ -37,7 +38,7 @@ function start() {
 
         switch(response.action) {
             case "View All Employees":
-                allEmployees(); 
+                allEmployees("ORDER BY id"); 
                 break;
             case "View All Employees by Department":
                 employeeByDept();
@@ -54,19 +55,29 @@ function start() {
             case "View All Roles":    
                 viewAllRoles();
                 break; 
+            case "View All Departments":    
+                viewAllDepts();
+                break; 
             case "Add Role":    
                 addRole();
                 break;     
+            case "Add Department":    
+                addDept();
+                break;  
+            case "Quit":   
+                connection.end(); 
+                break;        
         }
     })
 }
 
-const query = "SELECT e.id AS ID, e.first_name AS 'First Name', e.last_name AS 'Last Name', r.title AS Role, d.name AS Department, r.salary AS Salary, CONCAT(m.first_name,' ',m.last_name) AS Manager FROM employee e LEFT JOIN role r ON e.role_id = r.id LEFT JOIN department d ON r.department_id = d.id LEFT JOIN employee m ON e.manager_id = m.id"
+const query = `SELECT e.id AS ID, e.first_name AS 'First Name', e.last_name AS 'Last Name', r.title AS Role, d.name AS Department, r.salary AS Salary, CONCAT(m.first_name,' ',m.last_name) AS Manager FROM employee e LEFT JOIN role r ON e.role_id = r.id LEFT JOIN department d ON r.department_id = d.id LEFT JOIN employee m ON e.manager_id = m.id`
 
+// I realize that the way I am doing this is setting me up to be vulnerable to SQL injections. I have been trying to get it to work with placeholders, but I keep getting an error. I will keep it this way for now. 
 
 function allEmployees(request) {
 
-    connection.query(query, [request], function(err, res)
+    connection.query(`${query} ${request}`, function(err, res)
         {
             if (err) throw err;
             console.table(res);
@@ -74,31 +85,18 @@ function allEmployees(request) {
         })      
 }
 
-
 function employeeByDept() {
 
-    const departments = connection.query("SELECT * FROM department");
-    console.log(departments);
-
-    inquirer.prompt({
-        name:"department",
-        type: "list",
-        message: "Please select a Department.",
-        choices: departments
-    });
-
     deptChoice().then(([rows]) => {
-        console.log(rows);
         const departments = rows.map(r => r.name)
-        console.log(departments);
+        
         inquirer.prompt({
             name:"department",
             type: "list",
             message: "Please select a Department.",
             choices: departments
             }).then(function(response) {
-            console.log(response)
-            allEmployees(`WHERE d.name = "${response.department}"`); 
+                allEmployees(`WHERE d.name = "${response.department}"`) 
         })
     })
 }
@@ -189,17 +187,69 @@ function updateRole() {
     })
 }
 
-
 function viewAllRoles() {
     roleChoice().then(([rows]) => {
         console.table(rows);
+        start();
     })
+}
+
+function viewAllDepts() {
+    deptChoice().then(([rows]) => {
+        console.table(rows);
+        start();
+    })
+}
+
+function addRole() {
+    deptIdChoice().then(([rows]) => {
+        let deptId = rows.map(r => r.id);
+        inquirer.prompt([
+            {
+            name:"title",
+            type:"input",
+            message:"What is the role title?",
+            },
+            {
+            name:"salary",
+            type:"input",
+            message:"What is the role's salary?",
+            },
+            {
+            name:"department_id",
+            type:"list",
+            message:"Select the department ID for this role.",
+            choices: deptId
+            },
+
+        ]).then(function(response) {
+            console.log(response);
+            addNewRole(response.title, response.salary, response.department_id);
+        })
+    })
+}
+
+function addDept() {
+    inquirer.prompt([
+        {
+        name:"name",
+        type:"input",
+        message:"What is the department name?",
+        },
+        ]).then(function(response) {
+            console.log(response);
+            addNewDept(response.name);
+    })   
 }
 
 // Queries
 
 function deptChoice() {
     return connection.promise().query("SELECT name FROM department")
+}
+
+function deptIdChoice() {
+    return connection.promise().query("SELECT id FROM department")
 }
 
 function employeeChoice() {
@@ -227,6 +277,20 @@ function createEmployee(first_name, last_name, role_id, manager) {
 
 function updateemployeeRole(employee_id, role_id) {
     connection.query("UPDATE employee SET role_id = ? WHERE id = ?", [`${role_id}`, `${employee_id}`], function (err, res) {
+        if (err) throw err;
+        start();
+    })
+}
+
+function addNewRole(title, salary, department_id) {
+    connection.query("INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)", [`${title}`, `${salary}`, `${department_id}`], function (err, res) {
+        if (err) throw err;
+        start();
+    })
+}
+
+function addNewDept(name) {
+    connection.query("INSERT INTO department (name) VALUES (?)", [`${name}`], function (err, res) {
         if (err) throw err;
         start();
     })
