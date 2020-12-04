@@ -1,8 +1,10 @@
+// Setting up dependencies
 const mysql = require("mysql2");
 const inquirer = require("inquirer");
 const cTable = require("console.table");
 require("dotenv").config();
 
+// Setting up env for security. 
 const connection = mysql.createConnection({
     host: "localhost",
     port: process.env.DB_PORT,
@@ -12,6 +14,8 @@ const connection = mysql.createConnection({
     multipleStatements: true,
 });
 
+
+// Creating a connection and initiating the initial question prompt.
 connection.connect(function(err) {
     if (err) throw err;
     start();
@@ -75,6 +79,7 @@ const query = `SELECT e.id AS ID, e.first_name AS 'First Name', e.last_name AS '
 
 // I realize that the way I am doing this is setting me up to be vulnerable to SQL injections. I have been trying to get it to work with placeholders, but I keep getting an error. I will keep it this way for now. 
 
+// Function to generate all employees table
 function allEmployees(request) {
 
     connection.query(`${query} ${request}`, function(err, res)
@@ -85,6 +90,7 @@ function allEmployees(request) {
         });      
 };
 
+// Function to query for employees by dept
 function employeeByDept() {
 
     deptChoice().then(([rows]) => {
@@ -101,6 +107,7 @@ function employeeByDept() {
     })
 }
 
+// Function to query employees by manager
 function employeeByManage() {
 
     employeeChoice().then(([rows]) => {
@@ -120,6 +127,7 @@ function employeeByManage() {
     });
 };
 
+// Function to add an employee. Tried to get some help with having the results come up as names, but after many hours spent and a couple of office hours and tutoring sessions, I will go with this for now. 
 function addEmployee() {
     employeeChoice().then(([rows]) => {
         let roleId = rows.map(r => r.role_id);
@@ -155,7 +163,7 @@ function addEmployee() {
     })
 }
 
-
+// Function to update an employee's role
 function updateRole() {
     
     employeeChoice().then(([rows]) => {
@@ -182,6 +190,7 @@ function updateRole() {
     })
 }
 
+// Function to view all roles
 function viewAllRoles() {
     roleChoice().then(([rows]) => {
         console.table(rows);
@@ -189,6 +198,7 @@ function viewAllRoles() {
     })
 }
 
+// Function to view all departments
 function viewAllDepts() {
     deptChoice().then(([rows]) => {
         console.table(rows);
@@ -196,6 +206,8 @@ function viewAllDepts() {
     })
 }
 
+
+// Function to add a role
 function addRole() {
     deptIdChoice().then(([rows]) => {
         let deptId = rows.map(r => r.id);
@@ -223,6 +235,7 @@ function addRole() {
     })
 }
 
+// Function to add a department
 function addDept() {
     inquirer.prompt([
         {
