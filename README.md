@@ -87,6 +87,7 @@ Once running, the user can select any action he/she would like to complete:
 Watch the video below to see how the program works.
 
 ![Employee Tracker Demo](./assets/demo.gif)
+[YouTube Demo](https://www.youtube.com/watch?v=6aIA3Plgk48&feature=youtu.be)
 
 
 ## Contributing
